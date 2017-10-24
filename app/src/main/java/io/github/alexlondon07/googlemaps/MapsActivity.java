@@ -3,11 +3,19 @@ package io.github.alexlondon07.googlemaps;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
+import android.util.Log;
+import android.widget.Toast;
 
+import com.directions.route.AbstractRouting;
+import com.directions.route.Route;
+import com.directions.route.RouteException;
+import com.directions.route.Routing;
+import com.directions.route.RoutingListener;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -19,10 +27,15 @@ import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
+
+import java.util.ArrayList;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
+    private  String TAG = "MapsActivity.class";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,6 +87,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private void changeStateControls() {
         UiSettings uisettings = mMap.getUiSettings();
         uisettings.setZoomControlsEnabled(true);
+        uisettings.setCompassEnabled(true);//Brujula
+        uisettings.setMyLocationButtonEnabled(true);//Ubicación
     }
 
     private void createMarkers() {
@@ -85,6 +100,66 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(myHome, 17));
 
+        Polyline polyline = mMap.addPolyline(new PolylineOptions()
+                .add(myHome, myOffice)
+                .width(10)
+                .color(Color.BLUE)
+        );
+        
+        calculateRoute(myHome, myOffice);
+    }
+
+    RoutingListener routingListener = new RoutingListener() {
+        @Override
+        public void onRoutingFailure(RouteException e) {
+            Log.e(TAG, e.getMessage());
+        }
+
+        @Override
+        public void onRoutingStart() {
+            Log.i(TAG, "onRoutingStart");
+        }
+
+        @Override
+        public void onRoutingSuccess(ArrayList<Route> routes, int shortestRouteIndex) {
+
+            ArrayList polyLines = new ArrayList<>();
+            for(int i = 0; i < routes.size(); i++){
+                PolylineOptions polyLineOptions = new PolylineOptions();
+                polyLineOptions.color(ContextCompat.getColor(getApplicationContext(), R.color.colorAccent));
+                polyLineOptions.width(10);
+                polyLineOptions.addAll(routes.get(i).getPoints());
+
+                Polyline polyLine = mMap.addPolyline(polyLineOptions);
+                polyLines.add(polyLine);
+
+                int distance = routes.get(i).getDistanceValue();
+                int duration = routes.get(i).getDurationValue();
+
+                Toast.makeText(MapsActivity.this, " Distance: " +distance+  " and duration " + duration, Toast.LENGTH_LONG).show();
+            }
+        }
+
+        @Override
+        public void onRoutingCancelled() {
+            Log.e(TAG, "onRoutingCancelled");
+        }
+    };
+
+    private void calculateRoute(LatLng myHome, LatLng myOffice) {
+        ArrayList<LatLng> points = new ArrayList<>();
+        points.add(myHome);
+        points.add(myOffice);
+
+        Routing routing = new Routing.Builder()
+                .travelMode(AbstractRouting.TravelMode.DRIVING)
+                .alternativeRoutes(true)
+                .waypoints(points)
+                .key(getString(R.string.google_maps_key))
+                .optimize(false)
+                .withListener(routingListener)
+                .build();
+        routing.execute();
     }
 
     private BitmapDescriptor bitmapDescriptorFromVector(Context context, int vectorId) {
