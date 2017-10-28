@@ -114,6 +114,12 @@ public class MainActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
+    public void launchAddress(View view) {
+        Intent intent = new Intent(MainActivity.this, AddressActivity.class);
+        startActivity(intent);
+    }
+
+
     public void getLocationDevice(View view){
         if(locationServices.isCanGetLocation()){
             double longitude = locationServices.getLongitude();

@@ -86,7 +86,6 @@ public class LocationServices extends Service implements LocationListener{
                     if(location != null){
                         latitude = location.getLatitude();
                         longitude = location.getLongitude();
-                        Log.e(TAG, "line 89");
                     }
 
                 }
@@ -112,23 +111,23 @@ public class LocationServices extends Service implements LocationListener{
 
     //Permission settings
     public void showSettingsAlert(){
-        AlertDialog.Builder alerDialog = new AlertDialog.Builder(context);
-        alerDialog.setTitle("GPS no enabled");
-        alerDialog.setMessage("You want to turn it on?");
-        alerDialog.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+        AlertDialog.Builder alertDialog = new AlertDialog.Builder(context);
+        alertDialog.setTitle("GPS no enabled");
+        alertDialog.setMessage("You want to turn it on?");
+        alertDialog.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
                 Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
                 context.startActivity(intent);
             }
         });
-        alerDialog.setNegativeButton("No", new DialogInterface.OnClickListener() {
+        alertDialog.setNegativeButton("No", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
                 dialogInterface.cancel();
             }
         });
-        alerDialog.show();
+        alertDialog.show();
     }
 
 
